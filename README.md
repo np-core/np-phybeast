@@ -4,7 +4,7 @@
 ![](https://img.shields.io/badge/version-0.1.0-addd8e.svg)
 ![](https://img.shields.io/badge/biorxiv-v0-f7fcb9.svg)
 
-Outbreak phylogenetics and -dynamics for bacterial pathogens
+Outbreak phylogenetics and -dynamics for bacterial pathogens using nanopore sequencing
 
 ## Overview
 
