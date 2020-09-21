@@ -20,9 +20,9 @@ nextflow run np-core/np-phybeast --help true
 
 Usage:
 
-A typical command for reconstructing the reference alignment and maximum-lilihood tree is:
+A typical command for reconstructing the maximum-likelihood tree from core genome variants:
 
-    nextflow run np-core/np-phybeast --illumina fastq/ --tail "_R{1,2}.fastq.gz" --tree_builder raxml-ng 
+    nextflow run np-core/np-phybeast --alignment core.fasta --tree_builder raxml-ng 
 
 ```
 
