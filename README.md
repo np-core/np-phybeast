@@ -4,7 +4,7 @@
 ![](https://img.shields.io/badge/version-0.1.0-addd8e.svg)
 ![](https://img.shields.io/badge/biorxiv-v0-f7fcb9.svg)
 
-Phylogenetics and -dynamics for bacterial pathogens using short- and long-read (nanopore) sequencing data from cultured isolates :sauropod:
+Phylogenetics and -dynamics for bacterial pathogens using short- and long-read (nanopore) sequencing data :sauropod:
 
 
 ```
