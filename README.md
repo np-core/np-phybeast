@@ -34,12 +34,37 @@ We also endeavour to implement somewhat standardized procedures for more complex
 
 Hybrid phylogenies using a combined alignment of high-quality Illumina core variants and multiplex nanopore panels to contextualise nanopore isolates within a lineage's evolutionary history (e.g. for outbreak divergence dating) can be constructed using the `np-core/np-variants` workflow for `Megalodon`, as described below.
 
+
+## Configuration
+
+For resource configuration selection, please see: [`np-core/configs`](https://github.com/np-core/configs)
+
+Containers:
+
+* Docker tag: `np-core/phybeast:latest`
+* Singularity image: `phybeast-latest.sif`
+
+System configs:
+
+* **Default configuration**: `nextflow`
+* James Cook University cluster: `jcu`
+* NECTAR cloud: `nectar`
+
+Resource configs (default config):
+
+* Local server: `process`
+
+Profile configs (default config):
+
+* `docker` / `docker_gpu`
+* `singularity` / `singularity_gpu`
+
 ## Workflows
 
 ### Maximum-likelihood Phylodynamics
 
 ```
-nextflow run np-core/np-phybeast --alignment core.snps.fasta --raxml_model GTR+G+ASC_LEWIS
+nextflow run np-core/np-phybeast -profile docker --worklow ml --alignment core.snps.fasta --raxml_model GTR+G+ASC_LEWIS
 ```
 
 Basic workflow to construct an ML phylogeny from the provided alignment, check the dated root-to-tip regression signal, perform a date-randomisation test and generate time-scaled ML phyogeny and Skyline plot of effective population size via [`TreeTime`](https://github.com/neherlab/treetime).
@@ -67,12 +92,6 @@ Prepare the `YAML` configuration files with your prior specification and model s
 
 ```
 np beastling template --model bdss --out bdss.yaml
-```
-
-Configuration files allow you to copy and change various parameters without having to modify the `XML` files or generating a new `XML` in `BEAUTi` - there are a bunch of error checks on the configuration files. It can then be passed to the corresponding `XML` generating task on the command line:
-
-```
-np beastling xml-bdss --alignment core.snps.fasta --data meta.tsv --yaml bdss.yaml --prefix run1 --length 1000000000
 ```
 
 Prior configuration (`priors`) is split into three sections: model priors (`model`), prior intervals (`intervals`) and clock configurations (`clock`). Clock selection can be conducted on the command-line (`--clock strict`) and intervals have to be explicitly enabled (`--intervals`).
@@ -167,4 +186,20 @@ priors:
       real_space: true
 ```
 
-Metropolis-coupled MCMC chains can be selected using `--mcmc coupled` and the number of hot chains set with `--hot 3` - however, for some models like the *Multi-type Birth-Death* the coupled chain is not currently functional.
+**Step 2**
+
+Configuration files allow you to copy and change various parameters without having to modify the `XML` files or generating a new `XML` file in `BEAUTi` - there are a bunch of error checks on the configuration inputs. It can then be passed to the corresponding task on the command line:
+
+```
+np beastling xml-bdss --alignment core.snps.fasta --data meta.tsv --yaml bdss.yaml --prefix run1 --length 1000000000
+```
+
+Metropolis-coupled MCMC chains can be selected using `--mcmc coupled` and the number of hot chains can be set with `--hot <int>` - however, for some models like the *Multi-type Birth-Death* the coupled chain is not currently functional.
+
+**Step 3**
+
+Run the `Beastling` workflow on a folder of `XML` files generated using our wrappers (or manually). Not that if using `GPU` for model runs, it appears that the number of simultaneous runs or coupled chains on a single `GPU` will slow the computation time by a factor of the number of runs or chains running on the device.
+
+```
+nextflow run np-core/np-phybeast --alignment core.snps.fasta --raxml_model GTR+G+ASC_LEWIS
+```
