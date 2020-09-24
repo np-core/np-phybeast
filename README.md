@@ -206,7 +206,7 @@ nextflow run np-core/np-phybeast --alignment core.snps.fasta --raxml_model GTR+G
 
 ### BEAST and BEAGLE 
 
-`BEAGLE` with `SSE` support is preinstalled into the container and used for `CPU` and `GPU` acceleration. I noticed that best performance on `CPU` depend on setting both the `-instances` and `-threads` parameter when running `BEAST`, where `-instances` should not be larger than `-threads`. When both are set to the same value and `SSE` is activated there is a solid boost to performance on `CPU`. `GPU` performance is always much higher than `CPU`:
+`BEAGLE` with `SSE` support is preinstalled into the container and used for `CPU` and `GPU` acceleration. I noticed that best performance on `CPU` depend on setting both the `-instances` (divides the partition site patterns) and `-threads` parameter when running `BEAST`, where `-instances` should not be larger than `-threads`. When both are set to the same value (if there are a large number of site patterns) or `-threads` is higher than `-instances` (when the number of site patterns is smaller), and `SSE` is activated, there is a solid boost to performance on `CPU`. `GPU` performance is always much higher than `CPU`:
 
 TABLE
 
