@@ -77,7 +77,7 @@ Modules:
 
 ### Beastling Phylodynamics
 
-`Beastling` is a submodule of `NanoPath` which aims to make the exploration of complex phylodynamic models in `BEAST2` a little easier, and to scale multiple prior configurations of the models on clusters or `GPU` using `BEAGLE 3`. Since prior configurations can have strong impacts on the results of the models, this workflow will require you to prepare `Beastling` configuration files for your datasets.
+`Beastling` is a submodule of `NanoPath` which aims to make the exploration of complex phylodynamic models in `BEAST2` a little easier, and to scale multiple prior configurations of the models on clusters or `GPU` using `BEAGLE 3`. Since prior configurations can have strong impacts on the results of the models, this workflow will require you to prepare `Beastling` configuration files for your datasets or generate the `XML` inputs for your models manually (e.g. via `BEAUTi` or directly modifying your `XML` input files; `XML` templates for supported models can be found in [`np-core/nanopath/nanopath/templates`](https://github.com/np-core/nanopath/tree/master/nanopath/templates))
 
 Supported models and their tags:
 
@@ -88,7 +88,7 @@ Supported models and their tags:
 
 **Step 1**
 
-Prepare the `YAML` configuration files with your prior specification and model settings. Templates can be found at [`np-core/nanopath/nanopath/templates`](https://github.com/np-core/nanopath/tree/master/nanopath/templates) or can be produced with the corresponding tag:
+Prepare the `YAML` configuration files with your prior specification and model settings. Templates can be produced with the corresponding tag:
 
 ```
 np beastling template --model bdss --out bdss.yaml
@@ -188,7 +188,7 @@ priors:
 
 **Step 2**
 
-Configuration files allow you to copy and change various parameters without having to modify the `XML` files or generating a new `XML` file in `BEAUTi` - there are a bunch of error checks on the configuration inputs. It can then be passed to the corresponding task on the command line:
+Configuration files allow you to modify various parameters without having to change the actual `XML` or generating a new `XML` in `BEAUTi`. Model configuration files can then be passed to the corresponding task on the command line ti generate the `XML`:
 
 ```
 np beastling xml-bdss --alignment core.snps.fasta --data meta.tsv --yaml bdss.yaml --prefix run1 --length 1000000000
@@ -198,7 +198,7 @@ Metropolis-coupled MCMC chains can be selected using `--mcmc coupled` and the nu
 
 **Step 3**
 
-Run the `Beastling` workflow on a folder of `XML` files generated using our wrappers (or manually). Not that if using `GPU` for model runs, it appears that the number of simultaneous runs or coupled chains on a single `GPU` will slow the computation time by a factor of the number of runs or chains running on the device.
+Run the `Beastling` workflow on a folder of `XML` files generated using our wrappers (or manually). It appears that the number of simultaneous runs or coupled chains on a single `GPU` will slow the computation time by a factor of the number of runs or chains running on the device.
 
 ```
 nextflow run np-core/np-phybeast --alignment core.snps.fasta --raxml_model GTR+G+ASC_LEWIS
