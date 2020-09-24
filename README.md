@@ -96,7 +96,7 @@ np beastling template --model bdss --out bdss.yaml
 
 Prior configuration (`priors`) is split into three sections: model priors (`model`), prior intervals (`intervals`) and clock configurations (`clock`). Clock selection can be conducted on the command-line (`--clock strict`) and intervals have to be explicitly enabled (`--intervals`).
 
-For example the `Birth-Death Skyline Serial` configuration file looks like this, where the sampling proportion prior is fixed at zero from the `Origin` to the first sample in the collection (1991). Interval chnage times must include the most recent change point (`0`):
+For example the `Birth-Death Skyline Serial` configuration file looks like this, where the sampling proportion prior is fixed at zero from the `Origin` to the first sample in the collection (1991). Interval change times must include the most recent change point (`0`) and must be specified forward in time (most recent change point last):
 
 ```yaml
 priors:
