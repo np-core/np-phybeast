@@ -203,3 +203,10 @@ Run the `Beastling` workflow on a folder of `XML` files generated using our wrap
 ```
 nextflow run np-core/np-phybeast --alignment core.snps.fasta --raxml_model GTR+G+ASC_LEWIS
 ```
+
+### BEAST and BEAGLE 
+
+`BEAGLE` with `SSE` support is preinstalled into the container and used for `CPU` and `GPU` acceleration. I noticed that best performance on `CPU` depend on setting both the `-instances` and `-threads` parameter when running `BEAST`, where `-instances` should not be larger than `-threads`. When both are set to the same value and `SSE` is activated there is a solid boost to performance on `CPU`. `GPU` performance is always much higher than `CPU`:
+
+TABLE
+
