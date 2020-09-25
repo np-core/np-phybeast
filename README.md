@@ -200,16 +200,17 @@ Metropolis-coupled MCMC chains can be selected using `--mcmc coupled` and the nu
 
 **Step 3**
 
-Run the `Beastling` workflow on a folder of `XML` files generated using our wrappers (or manually). It appears that the number of simultaneous runs or coupled chains on a single `GPU` will slow the computation time by a factor of the number of runs or chains running on the device.
+Run the `Beastling` workflow on a glob of `XML` files generated using our wrappers (or manually). 
 
 ```
-mkdir bdss_runs && mv bdss.yaml bdss_runs
-nextflow run np-core/np-phybeast --config jcu -profile tesla --workflow beast --xmldir bdss_runs/ --beagle_gpu true 
+nextflow run np-core/np-phybeast --config jcu -profile tesla --workflow beast --beast_xml "*.xml" --beagle_gpu true 
 ```
 
 ### BEAST and BEAGLE 
 
-`BEAGLE` with `SSE` support is preinstalled into the container and used for `CPU` and `GPU` acceleration. I noticed that best performance on `CPU` depend on setting both the `-instances` (divides the partition site patterns) and `-threads` parameter when running `BEAST`, where `-instances` should not be larger than `-threads`. When both are set to the same value (if there are a large number of site patterns) or `-threads` is higher than `-instances` (when the number of site patterns is smaller), and `SSE` is activated, there is a solid boost to performance on `CPU`. `GPU` performance is always much higher than `CPU`:
+`BEAGLE` with `SSE` support is preinstalled into the container and used for `CPU` and `GPU` acceleration. I noticed that best performance on `CPU` depend on setting both the `-instances` (divides the partition site patterns) and `-threads` parameter when running `BEAST`, where `-instances` should not be larger than `-threads`. When both are set to the same value (if there are a large number of site patterns) or `-threads` is higher than `-instances` (when the number of site patterns is smaller), and `SSE` is activated, there is a solid boost to performance on `CPU`. 
+
+`GPU` performance is always much higher than `CPU`, but the number of simultaneous runs or coupled chains on a single `GPU` will slow the computation time by a factor of the number of runs or chains running on the device.
 
 TABLE
 
