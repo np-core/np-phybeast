@@ -75,11 +75,11 @@ Modules:
 * RAxML-NG (phylogeny)
 * TreeTime (phylodynamics)
 
-### Beastling Phylodynamics
+### BEAST2 Phylodynamics
 
-`Beastling` is a submodule of `NanoPath` which aims to make the exploration of complex phylodynamic models in `BEAST2` a little easier, and to scale multiple prior configurations of the models on clusters or `GPU` using `BEAGLE 3`. Since prior configurations can have strong impacts on the results of the models, this workflow will require you to prepare `Beastling` configuration files for your datasets or generate the `XML` inputs for your models manually (e.g. via `BEAUTi` or directly modifying your `XML` input files; `XML` templates for supported models can be found in [`np-core/nanopath/nanopath/templates`](https://github.com/np-core/nanopath/tree/master/nanopath/templates))
+`Beastling` is a submodule of `NanoPath` which aims to enable the exploration of complex phylodynamic models for bacterial pathogens in `BEAST2` and to scale multiple model configurations on `GPU` or `CPU` clusters using `BEAGLE 3`. Since prior configurations can have strong impacts on the results of the models, this workflow will require you to prepare sensible prior configurations for your data before launching the computation on the `XML` files. `Beastling` configuration templates are available and can be conveniently configured from the command line (**Steps 1 and 2**) or you can generate the `XML` inputs for your models manually; `XML` templates for supported models can be found in [`np-core/nanopath/nanopath/templates`](https://github.com/np-core/nanopath/tree/master/nanopath/templates))
 
-Supported models and their tags:
+Supported models and their `Beastling` tags:
 
 * *Birth-Death Skyline Serial* (`bdss`)
 * *Birth-Death Skyline Contemporary* (`bdsc`)
@@ -94,7 +94,7 @@ Prepare the `YAML` configuration files with your prior specification and model s
 np beastling template --model bdss --out bdss.yaml
 ```
 
-Prior configuration (`priors`) is split into three sections: model priors (`model`), prior intervals (`intervals`) and clock configurations (`clock`). Clock selection can be conducted on the command-line (`--clock strict`) and intervals have to be explicitly enabled (`--intervals`).
+Prior configuration (`priors`) is split into three sections: model priors (`model`), prior intervals (`intervals`) and clock configurations (`clock`). 
 
 For example the `Birth-Death Skyline Serial` configuration file looks like this, where the sampling proportion prior is fixed at zero from the `Origin` to the first sample in the collection (1991). Interval change times must include the most recent change point (`0`) and must be specified forward in time (most recent change point last):
 
@@ -194,6 +194,8 @@ Configuration files allow you to modify various parameters without having to cha
 np beastling xml-bdss --alignment core.snps.fasta --data meta.tsv --yaml bdss.yaml --prefix run1 --length 1000000000
 ```
 
+Clock selection can be conducted on the command-line (`--clock strict`) and intervals have to be explicitly enabled (`--intervals`).
+
 Metropolis-coupled MCMC chains can be selected using `--mcmc coupled` and the number of hot chains can be set with `--hot <int>` - however, for some models like the *Multi-type Birth-Death* the coupled chain is not currently functional.
 
 **Step 3**
@@ -201,7 +203,8 @@ Metropolis-coupled MCMC chains can be selected using `--mcmc coupled` and the nu
 Run the `Beastling` workflow on a folder of `XML` files generated using our wrappers (or manually). It appears that the number of simultaneous runs or coupled chains on a single `GPU` will slow the computation time by a factor of the number of runs or chains running on the device.
 
 ```
-nextflow run np-core/np-phybeast --alignment core.snps.fasta --raxml_model GTR+G+ASC_LEWIS
+mkdir bdss_runs && mv bdss.yaml bdss_runs
+nextflow run np-core/np-phybeast --config jcu -profile tesla --workflow beast --xmldir bdss_runs/ --beagle_gpu true 
 ```
 
 ### BEAST and BEAGLE 
