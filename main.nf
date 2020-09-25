@@ -1,6 +1,156 @@
-// Phybeast: bacterial phylodynamics workflow: DSL2
+#!/usr/bin/env nextflow
+
+/*
+vim: syntax=groovy
+-*- mode: groovy;-*-
+==============================================================================================================================
+                                        N P - S I G N A L   P I P E L I N E
+==============================================================================================================================
+
+ Nanopore signal processing pipeline (Fast5)
+
+ Documentation: https://github.com/np-core/np-signal
+
+ Original development by Queensland Genomics, Australian Institute of Tropical Health 
+ and Medicince, The Peter Doherty Intitute for Infection and Immunity
+
+Developers:
+
+    Eike Steinig  @esteinig  < @EikeSteinig >
+
+Pipeline part of the NanoPath core framework:
+
+    https://github.com/np-core
+
+NanoPath distributed pipeline framework Netflow:
+
+    https://github.com/np-core/netflow
+
+For interactive dashboard operation and report generation:
+
+    https://github.com/np-core/nanopath
+
+----------------------------------------------------------------------------------------
+*/
+
+import java.nio.file.Paths
 
 nextflow.enable.dsl=2
+
+// Helper functions
+
+def check_path(p, descr) {
+    
+    path = Paths.get(p)
+
+    if (path.exists()){
+        log.info"""
+        Detected input path for $descr: $p
+        """
+    } else {
+        log.info"""
+        Failed to detect input path for $descr: $p
+        """
+        exit 0
+    }
+}
+
+params.workflow = "ml"
+params.aligment = ""
+params.outdir = "$PWD/test_out"
+params.dates = ""
+params.raxml_model = "GTR+G+ASC_LEWIS"
+params.raxml_params = ""
+params.replicates = 100 // date randomisation test
+
+
+if (params.dates){
+    check_path(params.dates, "date file")
+    dates = file(params.dates) // stage file
+} else {
+    dates = ""
+}
+
+// Beastling
+
+params.beagle_order = "0" // default cpu
+params.beagle_threads = 4
+params.beagle_instances = 4
+
+params.beagle_gpu = false
+
+if (params.beagle_gpu){
+    beagle_params = "-beagle_gpu"
+    if (params.beagle_order == "0"){
+        log.info """
+        Warning: BEAGLE GPU selected but BEAGLE order is set to 0 (usually CPU)
+        """
+    }
+} else {
+    beagle_params = "-beagle_cpu -beagle_sse -threads ${params.beagle_threads} -instances ${params.beagle_instances}"
+}
+
+// Workflow version
+
+version = '0.1.3'
+
+def helpMessage() {
+
+    log.info"""
+    =========================================
+     N P - P H Y B E A S T  v${version}
+    =========================================
+
+    Usage (offline):
+
+        nextflow run np-core/np-phybeast --workflow ml --alignment core.fasta --dates dates.tsv
+
+    Deployment and resource configuration:
+
+            Resources can be configured hierarchically by first selecting a configuration file from
+            presets with `--config` and a resource presets with `--resource_config`
+
+            Specific process execution profiles defined within the configuration files are selected with
+            the native argument `-profile`
+
+            For more information see: https://github.com/np-core/config 
+
+    Subworkflow selection:
+
+        --workflow                  select the variant subworkflow to select: ml, beast [${params.workflow}]
+        --outdir                    output directory for results from workflow [${params.outdir}]
+
+    Required:
+
+        --alignment                 core genome variant alignment in FASTA format [${params.alignment}]
+        --dates                     tab-delimited meta data file, must include columns: name, date [${params.dates}]
+
+    Subworkflow - ML Phylodynamics:
+
+        --raxml_model               model to construct tree in raxml-ng [${params.raxml_model}]
+        --raxml_params              additional parameters to pass to raxml-ng [${params.raxml_params}]
+        --replicates                number of date randomisation replicates [${params.replicates}]
+    
+    Subworkflow - BEAST Phylodynamics:
+       
+        --beast_xml                 glob to xml input files with unique names [${params.beast_xml}]
+        --beast_params              string of additional beast parameters to specify ["${params.beast_params}"]
+        --beast_threads             BEAST threads (SSE) to use when running on CPU [${params.beagle_threads}]
+        --beagle_instances          BEAGLE partition splits to run on BEAST threads in parallel [${params.beagle_instances}]
+        --beagle_order              string device order to use in BEAGLE, 0 usually CPU, > 0 usually GPU ["${params.beagle_order}"]
+        --beagle_gpu                explicitly activate GPU compute with BEAGLE [${params.beagle_gpu}]
+
+    =========================================
+
+    """.stripIndent()
+}
+
+
+params.help = false
+if (params.help){
+    helpMessage()
+    exit 0
+}
 
 // Helper functions
 
@@ -8,151 +158,43 @@ def get_single_file( glob ){
     return channel.fromPath(glob) | map { file -> tuple(file.baseName, file) }
 }
 
-def get_paired_files( glob ){
-    return channel.fromFilePairs(glob, flat: true)
-}
-
-// Non-recombinant core-genome SNP alignment
-
-
-// Declare external files
-params.reference = "$PWD/jdk.fasta"
-reference = file(params.reference)
-
-params.meta_data = "$PWD/meta_data.tsv"
-meta_data = file(params.meta_data)
-
-params.outdir = "$PWD/test_out"
-params.tree_model = "GTR+G+ASC_LEWIS"
-
-params.replicates = 100 // date randomisation test
-
-include { Fastp } from './modules/fastp'
-include { SnippyFastq } from './modules/snippy'
-include { SnippyFasta } from './modules/snippy'
-include { SnippyCore  } from './modules/snippy'
-include { Gubbins  } from './modules/gubbins'
-
-workflow snippy_fastq {
-    take:
-        reads // id, forward, reverse
-    main:
-        Fastp(reads)
-        SnippyFastq(Fastp.out, reference)
-    emit:
-        SnippyFastq.out // id, results
-}       
-
-workflow snippy_fasta {
-    take:
-        contigs // id, fasta
-    main:
-        SnippyFasta(contigs, reference)
-    emit:
-        SnippyFasta.out // id, results
-}  
-
-workflow snippy_core {
-    take:
-        snippy // results
-    main:
-        SnippyCore(snippy.collect(), reference)
-        Gubbins(SnippyCore.out) // wgs snp alignment
-    emit:
-        Gubbins.out // non-recombinant snp core alignment
-}
 
 include { RAxML } from './modules/raxml'
 include { TreeTime } from './modules/treetime'
 include { VariantSites } from './modules/phybeast'
 include { DateRandomisation } from './modules/phybeast'
 
-// Basic phylogeny and phylodynamics based on ML
+// Basic phylogeny and phylodynamics based on ML 
 
-workflow phylodynamics_ml {
+workflow ml_phylodynamics {
     take:
         alignment
     main:
         VariantSites(alignment)
         RAxML(VariantSites.out)
-        TreeTime(RAxML.out, meta_data, alignment)
-        DateRandomisation(RAxML.out, TreeTime.out[0], meta_data, alignment)
+        TreeTime(RAxML.out, dates, alignment)
+        DateRandomisation(RAxML.out, TreeTime.out[0], dates, alignment)
     emit:
         RAxML.out
 }
 
 // Advanced models on GPU using BEAST2 and BEAGLE
 
-// include { BirthDeathSkyline } from './modules/beastling'
-// include { CoalescentSkyline } from './modules/beastling'
-// include { MultiTypeBirthDeath } from './modules/beastling'
+include { Beast } from './modules/beast'
 
-// // Should be used for exploratory runs unless sure that priors are configured appropriately
-
-// params.iterations = 1000000  
-// params.coupled_mcmc = false
-// params.beast_options = "--beagle_gpu"
-
-// params.cosky_config = "default"
-// params.cosky_dimensions = [2, 4, 8, 16]
-
-// params.bdss_config = "default"
-// params.bdss_dimensions = [5, 6, 7, 8]
-
-// params.mtdb_config = "default"
-// params.mtbd_types = ['mssa', 'clade']
-
-// include { Beast as BeastCosky } from './modules/beast'
-// include { Beast as BeastBDSS } from './modules/beast'
-// include { Beast as BeastMTBD } from './modules/beast'
-
-// workflow phylodynamics_beast {
-//     take:
-//         core_snp_alignment
-//     main:
-//         CoalescentSkyline() | BeastCosky
-//         BirthDeathSkyline() | BeastBDSS
-//         MultiTypeBirthDeath() | BeastMTBD
-// }
-
-// Execute
-
-params.subworkflow = "megalodon"
-params.panels = "$HOME/LINEAGES/ST93/Megalodon"
-params.candidates = "$HOME/LINEAGES/ST93/core.vcf"
-params.devices = "1"
-params.guppy_server_path = "/opt-guppy/bin/guppy_basecall_server"
-params.guppy_params = "--trim_barcodes --chunk_size 512 --chunks_per_runner 2048 --gpu_runners_per_device 4"
-params.guppy_config = "dna_r9.4.1_450bps_modbases_dam-dcm-cpg_hac.cfg"
-
-include { MegalodonVariants } from './modules/megalodon'
-
-def get_barcode_fast5(dir){
-
-    port = 5555
-    return channel.fromPath("$params.panels/**/*", type: 'dir').map { port += 1; tuple(port, it.getParent().getName(), it.getName(), it) }
-}
-
-        
-workflow megalodon_variants {
+workflow beast_phylodynamics {
     take:
-        barcodes
+        xml // tuple id, xml
     main:
-        MegalodonVariants(reference, barcodes)
+        Beast(xml, beagle_params)
     emit:
-        MegalodonVariants.out
+        Beast.out
 }
 
 workflow {
-    if (params.subworkflow == "assembly"){
-
-        fasta = get_single_file("FNQ*.fasta") | snippy_fasta
-        fastq = get_paired_files("*_{R1,R2}.fastq.gz") | snippy_fastq
-        fasta.mix(fastq) | snippy_core | phylodynamics_ml
-    
-    } else if (params.subworkflow == "megalodon"){
-
-        get_barcode_fast5(params.panels) | megalodon_variants
-
+    if (params.workflow == "ml"){
+        get_single_file(params.alignment) | ml_phylodynamics
+    } else {
+        get_single_file(params.alignment) | ml_phylodynamics
     }
 }
