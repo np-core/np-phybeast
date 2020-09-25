@@ -61,7 +61,7 @@ Profile configs (default config):
 
 ## Workflows
 
-### Maximum-likelihood Phylodynamics
+### Maximum-Likelihood Phylodynamics
 
 ```
 nextflow run np-core/np-phybeast -profile docker --worklow ml --alignment core.snps.fasta --raxml_model GTR+G+ASC_LEWIS
@@ -75,7 +75,7 @@ Modules:
 * RAxML-NG (phylogeny)
 * TreeTime (phylodynamics)
 
-### BEAST2 Phylodynamics
+### `BEAST` Phylodynamics
 
 `Beastling` is a submodule of `NanoPath` which aims to enable the exploration of complex phylodynamic models for bacterial pathogens in `BEAST2` and to scale multiple model configurations on `GPU` or `CPU` clusters using `BEAGLE 3`. Since prior configurations can have strong impacts on the results of the models, this workflow will require you to prepare sensible prior configurations for your data before launching the computation on the `XML` files. `Beastling` configuration templates are available and can be conveniently configured from the command line (**Steps 1 and 2**) or you can generate the `XML` inputs for your models manually; `XML` templates for supported models can be found in [`np-core/nanopath/nanopath/templates`](https://github.com/np-core/nanopath/tree/master/nanopath/templates))
 
@@ -86,7 +86,7 @@ Supported models and their `Beastling` tags:
 * *Multi-type Birth Death* (`mtbd`)
 * *Coalescent Bayesian Skyline* (`cosky`)
 
-**Step 1**
+#### `Beastling` Configuration
 
 Prepare the `YAML` configuration files with your prior specification and model settings. Templates can be produced with the corresponding tag:
 
@@ -94,9 +94,9 @@ Prepare the `YAML` configuration files with your prior specification and model s
 np beastling template --model bdss --out bdss.yaml
 ```
 
-Prior configuration (`priors`) is split into three sections: model priors (`model`), prior intervals (`intervals`) and clock configurations (`clock`). 
+Prior configuration (`priors`) is split into three sections: model priors (`model`), prior intervals (`intervals`) and clock configurations (`clock`). Please see below for sensible specifications of these models for bacterial pathogens. It is strongly recommended to run various dimensional slice settings on the reproduction number prior, as these may have relatively large impacts on the posterior distributions of all parameters. Slice or interval settings for sampling proportions are also recommended. Please note that the `BDSky` models are sensitive to population structure (e.g. phylogenetic divergences) and generally assume a mixed population - unintended and difficult-to-detect effects on posterior estimates across the model parameters can occur when structured populations are included.
 
-For example the `Birth-Death Skyline Serial` configuration file looks like this, where the sampling proportion prior is fixed at zero from the `Origin` to the first sample in the collection (1991). Interval change times must include the most recent change point (`0`) and must be specified forward in time (most recent change point last):
+For example, a potential `Birth-Death Skyline Serial` configuration looks like this: the sampling proportion prior is fixed at zero from the `Origin` to the first sample in the collection (1991). Interval change times must include the most recent change point (`0`) and must be specified forward in time (most recent change point last):
 
 ```yaml
 priors:
@@ -186,7 +186,7 @@ priors:
       real_space: true
 ```
 
-**Step 2**
+#### `Beastling` XML
 
 Configuration files allow you to modify various parameters without having to change the actual `XML` or generating a new `XML` in `BEAUTi`. Model configuration files can then be passed to the corresponding task on the command line ti generate the `XML`:
 
@@ -198,15 +198,15 @@ Clock selection can be conducted on the command-line (`--clock strict`) and inte
 
 Metropolis-coupled MCMC chains can be selected using `--mcmc coupled` and the number of hot chains can be set with `--hot <int>` - however, for some models like the *Multi-type Birth-Death* the coupled chain is not currently functional.
 
-**Step 3**
+#### `Phybeast` Workflow
 
-Run the `Beastling` workflow on a glob of `XML` files generated using our wrappers (or manually). 
+Run the `beast` workflow on a glob of `XML` files generated using our wrappers (or manually):
 
 ```
 nextflow run np-core/np-phybeast --config jcu -profile tesla --workflow beast --beast_xml "*.xml" --beagle_gpu true 
 ```
 
-### BEAST and BEAGLE 
+### `BEAST` on CPU and GPU 
 
 `BEAGLE` with `SSE` support is preinstalled into the container and used for `CPU` and `GPU` acceleration. I noticed that best performance on `CPU` depend on setting both the `-instances` (divides the partition site patterns) and `-threads` parameter when running `BEAST`, where `-instances` should not be larger than `-threads`. When both are set to the same value (if there are a large number of site patterns) or `-threads` is higher than `-instances` (when the number of site patterns is smaller), and `SSE` is activated, there is a solid boost to performance on `CPU`. 
 
