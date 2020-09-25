@@ -86,7 +86,7 @@ Supported models and their `Beastling` tags:
 * *Multi-type Birth Death* (`mtbd`)
 * *Coalescent Bayesian Skyline* (`cosky`)
 
-#### `Beastling` Configuration
+#### 1. `Beastling` Configuration
 
 Prepare the `YAML` configuration files with your prior specification and model settings. Templates can be produced with the corresponding tag:
 
@@ -186,7 +186,7 @@ priors:
       real_space: true
 ```
 
-#### `Beastling` XML
+#### 2. `Beastling` XML
 
 Configuration files allow you to modify various parameters without having to change the actual `XML` or generating a new `XML` in `BEAUTi`. Model configuration files can then be passed to the corresponding task on the command line ti generate the `XML`:
 
@@ -198,7 +198,7 @@ Clock selection can be conducted on the command-line (`--clock strict`) and inte
 
 Metropolis-coupled MCMC chains can be selected using `--mcmc coupled` and the number of hot chains can be set with `--hot <int>` - however, for some models like the *Multi-type Birth-Death* the coupled chain is not currently functional.
 
-#### `Phybeast` Workflow
+#### 3. `Phybeast` Workflow
 
 Run the `beast` workflow on a glob of `XML` files generated using our wrappers (or manually):
 
