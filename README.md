@@ -202,27 +202,27 @@ Metropolis-coupled MCMC chains can be selected using `--mcmc coupled` and the nu
 
 Run the `beast` workflow on a glob of `XML` files generated using our wrappers (or manually):
 
+**If you are running on GPU, you must explicitly enable `--beagle_gpu true` and set the correct device, for example: `--beagle_order 1`**
+
 ```
 nextflow run np-core/np-phybeast --config jcu -profile tesla --workflow beast --beast_xml "*.xml" --beagle_gpu true --beagle_order 1
 ```
 
-**If you are running on GPU, you must explicitly enable `--beagle_gpu true` and set the correct device for exampple `--beagle_order 1`**
-
 #### `BEAGLE` Settings 
 
-`BEAGLE` with `SSE` support is preinstalled into the container and used for `CPU` and `GPU` acceleration. I noticed that best performance on `CPU` depend on setting both the `-instances` (divides the partition site patterns) and `-threads` parameter when running `BEAST`, where `-instances` should not be larger than `-threads`. When both are set to the same value (if there are a large number of site patterns) or `-threads` is higher than `-instances` (when the number of site patterns is smaller), and `SSE` is activated, there is a solid boost to performance on `CPU`. 
+`BEAGLE` with `SSE` support is preinstalled into the container and can be used for `CPU` and `GPU` acceleration. `CPU` acceleration strongly depends on the number of site patterns in the alignment, and we note that using core genome SNPs for intra-lineage variation, performance is generally not be enhanced on `CPU`. This is because `BEAGLE` partitions the alignment into `-instances` which are then run on each `-thread`. As seen below, excessive instancing and threading on data with insufficient site patterns in fact decreases performance on `CPU`. 
 
-`GPU` performance is always much higher than `CPU`, but the number of simultaneous runs or coupled chains on a single `GPU` will slow the computation time by a factor of the number of runs or chains running on the device.
+`GPU` performance is much higher, but the number of simultaneous runs or coupled chains on a single `GPU` will slow the computation time by a factor of the number of runs or chains running on the device.
 
-Benchmarks were conducted on the `Birth-Death Skyline Serial` model using a dataset of 575 bacterial isolates and a core-genome alignment of around 7000 SNPs (somewhat few site patterns, so excessive instancing and threading of the partition makes it slower)
+Benchmarks were conducted on the `Birth-Death Skyline Serial` model using a dataset of 575 bacterial isolates and a core-genome alignment of around 7000 SNPs - because we are using intra-lineage core-genome SNPs, there are few site patterns in the data so that instancing and threading of the partition does not provide a speed-up.
 
-| Run **            | Minutes ***   | Minimal command                                           |
-| -------------     | ------------- |-----------------------------------------------------------|
-| CPU (t: 2, i: 2)  | 37:28 min     | `beast -beagle_cpu -beagle_sse -threads 2 -instances 2`   |
-| CPU (t: 4, i: 4)  | 37:28 min     | `beast -beagle_cpu -beagle_sse -threads 4 -instances 4`   |
-| CPU (t: 8, i: 4)  | 37:31 min     | `beast -beagle_cpu -beagle_sse -threads 8 -instances 4`   |
-| CPU (t: 8, i: 8)  | 40:36 min     | `beast -beagle_cpu -beagle_sse -threads 8 -instances 8`   |
-| GPU (GTX1080-TI)  | 07:08 min     | `beast -beagle_gpu`                                       |
+| Run **            | Minutes ***   | Minimal command                               |
+| -------------     | ------------- |-----------------------------------------------|
+| CPU (t: 2, i: 2)  | 38:50 min     | `beast -beagle_cpu -threads 2 -instances 2`   |
+| CPU (t: 4, i: 4)  | 37:28 min     | `beast -beagle_cpu -threads 4 -instances 4`   |
+| CPU (t: 8, i: 4)  | 37:31 min     | `beast -beagle_cpu -threads 8 -instances 4`   |
+| CPU (t: 8, i: 8)  | 40:36 min     | `beast -beagle_cpu -threads 8 -instances 8`   |
+| GPU (GTX1080-TI)  | 07:08 min     | `beast -beagle_gpu`                           |
 
 **  `-seed 777`, time assessed at step 500k, *** per million steps on a standard MCMC
 
