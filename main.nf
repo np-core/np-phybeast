@@ -55,14 +55,13 @@ def check_path(p, descr) {
     }
 }
 
-params.workflow = "ml"
-params.aligment = ""
 params.outdir = "$PWD/test_out"
+params.workflow = "ml"
+params.alignment = ""
 params.dates = ""
 params.raxml_model = "GTR+G+ASC_LEWIS"
 params.raxml_params = ""
 params.replicates = 100 // date randomisation test
-
 
 if (params.dates){
     check_path(params.dates, "date file")
@@ -74,8 +73,8 @@ if (params.dates){
 // Beastling
 
 params.beagle_order = "0" // default cpu
-params.beagle_threads = 4
-params.beagle_instances = 4
+params.beagle_threads = 2
+params.beagle_instances = 2
 
 params.beagle_gpu = false
 
@@ -87,7 +86,7 @@ if (params.beagle_gpu){
         """
     }
 } else {
-    beagle_params = "-beagle_cpu -beagle_sse -threads ${params.beagle_threads} -instances ${params.beagle_instances}"
+    beagle_params = "-beagle_cpu -beagle_sse -instances ${params.beagle_instances}"
 }
 
 // Workflow version
