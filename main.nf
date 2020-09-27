@@ -90,14 +90,12 @@ params.beagle_gpu = false
 
 if (params.beagle_gpu){
     beagle_params = "-beagle_gpu -beagle_order ${params.beagle_order}"
-    beast_label = "beast_gpu"
     if (params.beagle_order == "0"){
         log.info """
         Warning: BEAGLE GPU selected but BEAGLE order is set to 0 (usually CPU)
         """
     }
 } else {
-    beast_label = "beast"
     beagle_params = "-beagle_cpu -beagle_sse -instances ${params.beagle_instances} -beagle_order ${params.beagle_order}"
 }
 
@@ -191,15 +189,20 @@ workflow ml_phylodynamics {
 
 // Advanced models on GPU using BEAST2 and BEAGLE
 
-include { Beast } from './modules/beast'
+include { BeastCPU } from './modules/beast'
+include { BeastGPU } from './modules/beast'
 
 workflow beast_phylodynamics {
     take:
         xml // tuple id, xml
     main:
-        Beast(xml, beagle_params, beast_label)
+        if (params.beast_gpu){
+            beast = BeastGPU(xml, beagle_params)
+        } else {
+            beast = BeastCPU(xml, beagle_params)
+        }
     emit:
-        Beast.out
+        beast
 }
 
 workflow {
