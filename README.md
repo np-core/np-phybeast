@@ -28,9 +28,9 @@ A typical command for reconstructing the maximum-likelihood tree from core genom
 
 ## Description
 
-`Phybeast` is a pipeline for lineage-based phylogenetic and -dynamic analyses of bacterial pathogens. In its simplest incarnation it is meant to provide a phylogenomic history of a particular lineage such as the [Bengal Bay (ST772-MRSA)](https://mbio.asm.org/content/10/6/e01105-19) or the [Queensland clone (ST93-MRSA)]() of *Staphylococcus aureus*. 
+`Phybeast` is a pipeline for lineage-based phylogenetic and -dynamic analyses of bacterial pathogens. In its simplest incarnation it is meant to provide a ML phylogenetic tree and basic ML-based phylodemographic estimates of a particular lineage, such as the [Bengal Bay (ST772-MRSA)](https://mbio.asm.org/content/10/6/e01105-19) or the [Queensland clone (ST93-MRSA)]() of *Staphylococcus aureus*. 
 
-We also endeavour to implement somewhat standardized procedures for more complex phylodynamic analyses based on maximum-likelihood and Bayesian approahes in `BEAST2`. We hope that this makes these analyses more convenient and accessible, either directly from sequence reads, and provide some degree of standardisation for lineage-focused phylogenetics and -dynamics in bacterial pathogens.
+We endeavour to implement a somewhat standardized procedures for more complex phylodynamic analyses based on maximum-likelihood and Bayesian approaches in `BEAST2`. We hope that this makes these analyses more convenient and accessible, and provide some degree of standardisation for lineage-focused phylogenetics and -dynamics in bacterial pathogens.
 
 Hybrid phylogenies using a combined alignment of high-quality Illumina core variants and multiplex nanopore panels to contextualise nanopore isolates within a lineage's evolutionary history (e.g. for outbreak divergence dating) can be constructed using the `np-core/np-variants` workflow for `Megalodon`, as described below.
 
@@ -46,13 +46,13 @@ Containers:
 
 System configs:
 
-* **Default configuration**: `nextflow`
-* James Cook University cluster: `jcu`
-* NECTAR cloud: `nectar`
+* **Default configuration**: `default`
+* James Cook University (McBryde group): `jcu`
+* NECTAR (Coin group): `nectar`
 
 Resource configs (default config):
 
-* Local server: `process`
+* **Default resource configuration**: `default`
 
 Profile configs (default config):
 
@@ -91,12 +91,18 @@ Supported models and their `Beastling` tags:
 Prepare the `YAML` configuration files with your prior specification and model settings. Templates can be produced with the corresponding tag:
 
 ```
-np beastling template --model bdss --out bdss.yaml
+np beastling config --model bdss --out bdss.yaml
 ```
 
-Prior configuration (`priors`) is split into three sections: model priors (`model`), prior intervals (`intervals`) and clock configurations (`clock`). Please see below for sensible specifications of these models for bacterial pathogens. It is strongly recommended to run various dimensional slice settings on the reproduction number prior, as these may have relatively large impacts on the posterior distributions of all parameters. Slice or interval settings for sampling proportions are also recommended. Please note that the `BDSky` models are sensitive to population structure (e.g. phylogenetic divergences) and generally assume a mixed population - unintended and difficult-to-detect effects on posterior estimates across the model parameters can occur when structured populations are included.
+Prior configuration (`priors`) is split into three sections: model priors (`model`), prior intervals (`intervals`) and clock configurations (`clock`). Sensible prior configurations of  models for different bacterial pathogens are highly dependent on the dataset and species. The example below is from *Staphylococcus aureus* (ST93 intra-lineage, ~7000 core genome SNPs, n = 575). It is strongly recommended to run various dimensional slice settings on the reproduction number prior, as these have been observed to have relatively large impacts on the posterior distributions of all parameters. Slice or interval settings for sampling proportions are also recommended, usually with a zero fixing towards the origin, before the first sample in the collection. 
 
-For example, a potential `Birth-Death Skyline Serial` configuration looks like this: the sampling proportion prior is fixed at zero from the `Origin` to the first sample in the collection (1991). Interval change times must include the most recent change point (`0`) and must be specified forward in time (most recent change point last):
+**Note on model assumptions**:
+
+Please note that the `Birth-Death Skyline` models are sensitive to population structure (e.g. phylogenetic divergences) and generally assume a mixed population - unintended and difficult-to-detect effects on posterior estimates across the model parameters can occur when highly structured populations are included and the effects may be difficult to tease aparts. We have observed this effect in a lineage-wide comparison of *S. aureus* sequence types in the ST93 lineage with strong substructure between ancestral MSSA and divergent MRSA clades and in particular the estimate of the become uninfectious rate, where the result was strongly driven by the prior (resulting in a substantially shorter infection period compared to other lineages. It was not observed when running the model on the MSSA and divergent MRSA population independently in which case the model estimated more realistic values for the become uninfectious rate. Setting a realistic prior distribution informed by esitimates from the literature and estimated rates across other lineages, ultimately corrected this effect but it may be hard to detect. Models can be run independently on less structured subclades in the ML phylogeny of the genome collection. *Multi-Type Birth Death* models are more suited to highly structured populations, where subpopulations can be defined as demes. However, their application to bacterial data is currently not well explored by us and preliminary runs on ST93 and other sequence types did not converge. We have included them in `Beastling` for further testing.
+
+**Example configuration**:
+
+A `Birth-Death Skyline Serial` configuration can look like this: the sampling proportion prior is fixed at zero from the `Origin` to the first sample in the collection (1991). Interval change times must include the most recent change point (`0`) and must be specified forward in time (most recent change point last):
 
 ```yaml
 priors:
@@ -210,9 +216,7 @@ nextflow run np-core/np-phybeast --config jcu -profile tesla --workflow beast --
 
 #### `BEAGLE` Settings 
 
-`BEAGLE` with `SSE` support is preinstalled into the container and can be used for `CPU` and `GPU` acceleration. `CPU` acceleration strongly depends on the number of site patterns in the alignment, and we note that using core genome SNPs for intra-lineage variation, performance is generally not be enhanced on `CPU`. This is because `BEAGLE` partitions the alignment into `-instances` which are then run on each `-thread`. As seen below, excessive instancing and threading on data with insufficient site patterns in fact decreases performance on `CPU`. 
-
-`GPU` performance is much higher, but the number of simultaneous runs or coupled chains on a single `GPU` will slow the computation time by a factor of the number of runs or chains running on the device.
+`BEAGLE` with `SSE` support is preinstalled into the container and can be used for `CPU` and `GPU` acceleration. `CPU` acceleration strongly depends on the number of site patterns in the alignment, and we note that using core genome SNPs for intra-lineage variation, performance is generally not be enhanced on `CPU`. This is because `BEAGLE` partitions the alignment into `-instances` which are then run on each `-thread`. As seen below, excessive instancing and threading on data with insufficient site patterns in fact decreases performance on `CPU`. Its advantage is that - with a penalty to runtime over `GPU` application - we can scale exploratory runs with a large number of prior configurations over clusters effectively. Ideally `GPU` clusters can be used to signficantly decrease compute time. `GPU` performance is much higher, but the number of simultaneous runs or coupled chains on a single `GPU` will slow the computation time by a factor of the number of runs or chains running on the device. Ultimately, you'd need a lot of `GPUs`
 
 Benchmarks were conducted on the `Birth-Death Skyline Serial` model using a dataset of 575 bacterial isolates and a core-genome alignment of around 7000 SNPs - because we are using intra-lineage core-genome SNPs, there are few site patterns in the data so that instancing and threading of the partition does not provide a speed-up.
 
@@ -226,6 +230,11 @@ Benchmarks were conducted on the `Birth-Death Skyline Serial` model using a data
 
 **  `-seed 777`, time assessed at step 500k, *** per million steps on a standard MCMC
 
+#### Prior Exploration
+
+TBD
+
 ## Hybrid Phylogenies 
 
+TBD
 
