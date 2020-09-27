@@ -82,11 +82,11 @@ if (params.alignment){
 params.beast_xml = "$PWD/*.xml"
 params.beast_params = ""
 params.beagle_order = "0" // default cpu
+params.beagle_instances = 2
+params.beagle_gpu = false
 
 // params.beast_threads defined in base config
 
-params.beagle_instances = 2
-params.beagle_gpu = false
 
 if (params.beagle_gpu){
     beagle_params = "-beagle_gpu -beagle_order ${params.beagle_order}"
@@ -196,7 +196,7 @@ workflow beast_phylodynamics {
     take:
         xml // tuple id, xml
     main:
-        if (params.beast_gpu){
+        if (params.beagle_gpu){
             beast = BeastGPU(xml, beagle_params)
         } else {
             beast = BeastCPU(xml, beagle_params)
