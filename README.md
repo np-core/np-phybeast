@@ -47,8 +47,8 @@ Containers:
 System configs:
 
 * **Default configuration**: `default`
-* James Cook University cluster: `jcu`
-* NECTAR cloud: `nectar`
+* James Cook University (McBryde group): `jcu`
+* NECTAR (Coin group): `nectar`
 
 Resource configs (default config):
 
