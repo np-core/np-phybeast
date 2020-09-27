@@ -230,6 +230,11 @@ Benchmarks were conducted on the `Birth-Death Skyline Serial` model using a data
 
 **  `-seed 777`, time assessed at step 500k, *** per million steps on a standard MCMC
 
+#### Prior Exploration
+
+TBD
+
 ## Hybrid Phylogenies 
 
+TBD
 
