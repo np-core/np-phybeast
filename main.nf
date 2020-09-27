@@ -56,8 +56,8 @@ def check_path(p, descr) {
 }
 
 params.outdir = "$PWD/test_out"
-params.workflow = "ml"
 params.alignment = ""
+params.workflow = "ml"
 params.dates = ""
 params.raxml_model = "GTR+G+ASC_LEWIS"
 params.raxml_params = ""
@@ -70,12 +70,22 @@ if (params.dates){
     dates = ""
 }
 
+if (params.alignment){
+    check_path(params.alignment, "alignment file")
+    alignment = file(params.alignment) // stage file
+} else {
+    alignment = ""
+}
+
 // Beastling
 
+params.beast_xml = "$PWD/*.xml"
+params.beast_params = ""
 params.beagle_order = "0" // default cpu
-params.beagle_threads = 2
-params.beagle_instances = 2
 
+// params.beast_threads defined in base config
+
+params.beagle_instances = 2
 params.beagle_gpu = false
 
 if (params.beagle_gpu){
@@ -192,8 +202,8 @@ workflow beast_phylodynamics {
 
 workflow {
     if (params.workflow == "ml"){
-        get_single_file(params.alignment) | ml_phylodynamics
+        get_single_file(alignment) | ml_phylodynamics
     } else {
-        get_single_file(params.alignment) | ml_phylodynamics
+        get_single_file(params.beast_xml) | beast_phylodynamics
     }
 }
