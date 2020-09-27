@@ -144,7 +144,7 @@ def helpMessage() {
        
         --beast_xml                 glob to xml input files with unique names [${params.beast_xml}]
         --beast_params              string of additional beast parameters to specify ["${params.beast_params}"]
-        --beast_threads             BEAST threads (SSE) to use when running on CPU [${params.beagle_threads}]
+        --beast_threads             BEAST threads (SSE) to use when running on CPU [${params.beast_threads}]
         --beagle_instances          BEAGLE partition splits to run on BEAST threads in parallel [${params.beagle_instances}]
         --beagle_order              string device order to use in BEAGLE, 0 usually CPU, > 0 usually GPU ["${params.beagle_order}"]
         --beagle_gpu                explicitly activate GPU compute with BEAGLE [${params.beagle_gpu}]
