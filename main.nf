@@ -89,14 +89,16 @@ params.beagle_instances = 2
 params.beagle_gpu = false
 
 if (params.beagle_gpu){
-    beagle_params = "-beagle_gpu"
+    beagle_params = "-beagle_gpu -beagle_order ${params.beagle_order}"
+    beast_label = "beast_gpu"
     if (params.beagle_order == "0"){
         log.info """
         Warning: BEAGLE GPU selected but BEAGLE order is set to 0 (usually CPU)
         """
     }
 } else {
-    beagle_params = "-beagle_cpu -beagle_sse -instances ${params.beagle_instances}"
+    beast_label = "beast"
+    beagle_params = "-beagle_cpu -beagle_sse -instances ${params.beagle_instances} -beagle_order ${params.beagle_order}"
 }
 
 // Workflow version
@@ -195,7 +197,7 @@ workflow beast_phylodynamics {
     take:
         xml // tuple id, xml
     main:
-        Beast(xml, beagle_params)
+        Beast(xml, beagle_params, beast_label)
     emit:
         Beast.out
 }
