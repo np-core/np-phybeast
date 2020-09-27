@@ -42,13 +42,13 @@ For resource configuration selection, please see: [`np-core/configs`](https://gi
 Containers:
 
 * Docker tag: `np-core/phybeast:latest`
-* Singularity image: `phybeast-latest.sif`
+* Singularity image e.g. `$HOME/phybeast-latest.sif`
 
 System configs:
 
-* **Default configuration**: `default`
-* James Cook University (McBryde group): `jcu`
-* NECTAR (Coin group): `nectar`
+* **Default system configuration**: `default`
+* James Cook University (McBryde group): `envs/jcu`
+* NECTAR (Coin group): `envs/nectar`
 
 Resource configs (default config):
 
