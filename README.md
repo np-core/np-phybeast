@@ -46,13 +46,13 @@ Containers:
 
 System configs:
 
-* **Default configuration**: `nextflow`
+* **Default configuration**: `default`
 * James Cook University cluster: `jcu`
 * NECTAR cloud: `nectar`
 
 Resource configs (default config):
 
-* Local server: `process`
+* **Default resource configuration**: `default`
 
 Profile configs (default config):
 
