@@ -70,12 +70,12 @@ if (params.dates){
     dates = ""
 }
 
-if (params.alignment){
-    check_path(params.alignment, "alignment file")
-    alignment = file(params.alignment) // stage file
-} else {
-    alignment = ""
-}
+// if (params.alignment){
+//     check_path(params.alignment, "alignment file")
+//     alignment = file(params.alignment) // stage file
+// } else {
+//     alignment = ""
+// }
 
 // Beastling
 
