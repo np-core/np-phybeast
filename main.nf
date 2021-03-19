@@ -207,7 +207,7 @@ workflow beast_phylodynamics {
 
 workflow {
     if (params.workflow == "ml"){
-        get_single_file(alignment) | ml_phylodynamics
+        get_single_file(params.alignment) | ml_phylodynamics
     } else {
         get_single_file(params.beast_xml) | beast_phylodynamics
     }
