@@ -55,6 +55,24 @@ def check_path(p, descr) {
     }
 }
 
+def get_matching_data( channel1, channel2 ){
+
+    // Get matching data by ID (first field) from two channels
+    // by crossing, checking for matched ID and returning
+    // a combined data tuple with a single ID (first field)
+
+    channel1.cross(channel2).map { crossed ->
+        if (crossed[0][0] == crossed[1][0]){
+            tuple( crossed[0][0], *crossed[0][1..-1], *crossed[1][1..-1] )
+        } else {
+            null
+        }
+    }
+    .filter { it != null }
+
+}
+
+
 params.outdir = "$PWD/test_out"
 params.alignment = ""
 params.workflow = "ml"
@@ -177,10 +195,12 @@ include { DateRandomisation } from './modules/phybeast'
 
 workflow ml_phylodynamics {
     take:
-        alignment
+        alignment  // id, aln
     main:
         VariantSites(alignment)
         RAxML(VariantSites.out)
+        println alignment
+        println RAxML.out
         TreeTime(RAxML.out, dates, alignment)
         DateRandomisation(RAxML.out, TreeTime.out[0], dates, alignment)
     emit:
