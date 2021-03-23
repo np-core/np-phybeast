@@ -199,8 +199,7 @@ workflow ml_phylodynamics {
     main:
         VariantSites(alignment)
         RAxML(VariantSites.out)
-        alignment | view
-        RAxML.out | view 
+        get_matching_data(RAxML.out, alignment) | view
         TreeTime(RAxML.out, dates, alignment)
         DateRandomisation(RAxML.out, TreeTime.out[0], dates, alignment)
     emit:
