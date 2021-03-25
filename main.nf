@@ -200,7 +200,7 @@ workflow ml_phylodynamics {
         VariantSites(alignment)
         RAxML(VariantSites.out)
         TreeTime(get_matching_data(RAxML.out, alignment), dates)
-        DateRandomisation(TreeTime.out[0], dates)
+        // DateRandomisation(TreeTime.out[0], dates)
     emit:
         RAxML.out
 }
